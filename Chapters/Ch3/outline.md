@@ -1,5 +1,7 @@
 # Ch3 Common Programming Concepts
 
+! code examples taken verbatim from https://doc.rust-lang.org/book and notes more or less a paraphrase of the text
+
 covers concepts familiar to every programming language and how they work in Rust. topics: 
 * variables
 * basic types 
@@ -124,6 +126,142 @@ store it in a variable with the same name. `mut` doesn't let you change the type
 only its value, so if you wanted to achieve this trick with mutable variables you could not.
 
 ## Data Types
+
+All values in Rust have types, and Rust is statically types, so all types must be known or inferred at compile time.
+you can provide a type annotation when declaring a type such as `let guess: u32`, and this is required in cases
+where the compiler wouldn't be able to otherwise infer the type from the value and usage.
+
+### Scalar Types
+
+types that represent a single value. types in this space include: 
+* integer
+* floating-point number
+* Boolean
+* characters
+
+#### integer
+
+definition - number without a fractional component. There are many sub types for integer, subdivided by whether they are 
+signed or unsigned and how many bits it takes to represent them in memory: 
+
+| Length  | Signed| Unsigned |
+| ------------- | ------------- | ------------- |
+| 8-bit | i8 | u8 |
+| 16-bit | i16 | u16 |
+| 32-bit | i32 | u32 |
+| 64-bit | i64 | u64 |
+| 128-bit | i128 | u128 |
+| arch | isize | usize |
+
+The range of values a type can hold depends on whether it is signed or unsigned and which range it has. Signed values are
+representend with two's complement https://en.wikipedia.org/wiki/Two%27s_complement and have range -(2^(n-1)) to (2^(n-1))-1, 
+if it is unsigned, the range is greater but only positive, 0 to 2^n - 1. There are also the two types isize and usize which 
+adopt the number of bits equal to the architecture of the machine the code is running on. 
+
+There is support for number literals of various forms and provide a type suffix to these literals as well to put them in a 
+representation of the type in the table above. 
+
+| Number Literals | Example |
+| Decimal	| 98_222 |
+| Hex	| 0xff |
+| Octal	| 0o77 |
+| Binary	| 0b1111_0000 |
+| Byte | (u8 only)	b'A' |
+
+so an example of an integer literal hexidecimal could be something like `0xaau8` for the number 170 taking up 8 bits of memory
+
+the default is `i32` for integer and that is usually fine for most common variable ranges. If you use a representation that can't
+handle the number then you will get an integer overflow error. Rust has an interesting failover feature with overflow. In non-release
+builds Rust will compile in a check at runtime for overflow and the program will `panic` a.k.a have a runtime error. 
+When you use the --release flag, there will not be an overflow check or panic, instead it will allow the number to wrap around
+its max and start counting up from the lowest part of its representation. This is probably going to cause wonky behavior for your
+released program, so there are other methods suggested from the Rust standard library to deal with overflow. 
+
+#### floating-point types
+
+These are when you need a decimal/fraction component. There are only 2 types, `f32` and `f64`. They are both signed types. 
+The numbers correspond to how many bits are used to represent them. The default is `f64`, which may seem surprising coming
+from other languages with the 32 bit precision float and 64 bit precision double since in the past it has been recommended 
+to use float unless you need the extra precision. Rust achieves roughly the same performance on modern CPUs with both types,
+so it defaults to f64 instead. These types conform to IEEE-754 floating point standard, so if you are familiar from other
+languages then it will be very similar. If not and you want to be very precise, it is advisable to read the spec or some summary 
+of it. 
+
+#### numeric operations
+
++, -, *, /, % are all supported for numeric types. If you divide two integers, Rust will automatically round down to the nearest integer.
+
+Rust has other operators not necessarily specific to numeric types, since this is the first intro to them, you can find the other
+operators in the appendix of the book: https://doc.rust-lang.org/book/appendix-02-operators.html
+
+#### boolean types
+
+denoted by `bool`, they take up 1 byte of space, they are either `true` or `false`
+
+#### character types
+
+denoted by `char` keyword. use single quotes to differentiate from string (familar from other languages as well). takes up 4 bytes
+and is Unicode, not ASCII. This is a departure from C family. Chapter 8 has a whole section devoted to getting comfortable with 
+working with Unicode. 
+
+### Compound Types
+
+Compound types group together multiple values but are themselves one type, like primitive-data structures. There are only two 
+of these in Rust, so no native dictionary-esque type like python or ruby has. Arrays and Tuples are the two
+
+#### tuple types
+
+grouping together a number of values that have a variety of types in to a compound type. You can't resize a tuple after it is 
+declared. 
+
+the syntax is what is often used for tuples, like in python, a comma-separated list of values enclosed in parenthesis. Every 
+position in the tuple as a type and the types of the values in the tuple can be different. you can provide type annotations
+when declaring a tuple by creating a paranthetical with comma separated type annotations corresponding to the positions of the
+values in the tuple: 
+
+```Rust
+// with type annotations
+fn main() {
+    let tup: (i32, f64, u8) = (500, 6.4, 1);
+}
+
+// with type inference and destructuring into variables.
+fn main() {
+    let tup = (500, 6.4, 1);
+
+    let (x, y, z) = tup;
+
+    println!("The value of y is: {}", y);
+}
+```
+if you want to get a value from a tuple, you use dot notation followed by the index of the value you want in the tuple. they are
+zero indexed. 
+
+#### array types
+
+every element of an array has to have the same type. arrays also have a fixed length in Rust (this is more like C and Java, less like Python)
+
+declaring an array is similar to python list declaration. Looks just like tuple except square brackets enclose the comma separated
+list instead of parentheses. 
+
+just like with most languages, the array type is less flexible than its standard library cousin, vector, covered in Chapter 8. Because 
+an array is a primitive, it will be allocated to the stack instead of the heap. 
+
+```Rust
+let a: [i32; 5] = [1, 2, 3, 4, 5];
+//shorthand array initializer for same value for every element
+let a = [3; 5];
+// this would be [3, 3, 3, 3, 3]
+
+// accessing elements is what you might expect
+a[0]
+// this would be 3
+```
+
+if you try to access a location that is beyond the maximum index of the array, Rust will throw a runtime error, er, panic. This is more
+memory safety than say C, where you could start assigning values in memory address space that wasn't allocated for your array, 
+which could corrupt whatever that memory was being used for. 
+
 
 ### Functions
 
@@ -278,5 +416,88 @@ depending on somethng that might only be known at runtime is not allowed, the co
 the variable assignment. 
 
 ### Repetition With Loops
+
+## loop
+
+Rust's kind of answer to the `do while` in C family languages is the `loop` construct.  There are scenarios
+in coding when you just want to loop without a condition and then break out of it at some point later. instead of 
+doing somethign like `while(true) {}` you can just do `loop {}` in Rust. This is also a good structure to use when
+you know the condition that breaks the loop will occur within the body of the code. 
+
+`break` and `continue` are also introduced here, which either exit or jump to the next iteration of the innermost loop.
+One interesting thing about `break` with Rust is that it lets you specify a return argument to `break` so loops can 
+have return values. 
+
+```Rust
+fn main() {
+    let mut counter = 0;
+
+    let result = loop {
+        counter += 1;
+
+        if counter == 10 {
+            break counter * 2;
+        }
+    };
+
+    println!("The result is {}", result);
+}
+```
+
+# while
+
+This could be thought of as like syntactic sugar for a `loop` that has an if statement at the top checking a condition 
+and then breaking if the conditional expression evaluates to false. you can just use the while syntax and avoid 
+nesting the control structures. 
+
+```Rust
+fn main() {
+    let mut number = 3;
+
+    while number != 0 {
+        println!("{}!", number);
+
+        number -= 1;
+    }
+
+    println!("LIFTOFF!!!");
+}
+```
+
+# for
+
+iterating over elements in an array is a common use case for programs. Rust has the `for` construct for this, saving a little
+runtime performance over while becuase of the explicit condition that the compiler can't preoptimize away and also
+some statements that the programmer could get incorrect when updating the logic.
+
+```Rust
+// here is a while loop version
+fn main() {
+    let a = [10, 20, 30, 40, 50];
+    let mut index = 0;
+
+    while index < 5 {
+        println!("the value is: {}", a[index]);
+
+        index += 1;
+    }
+}
+// here is for, notice no conditional or index references.
+fn main() {
+    let a = [10, 20, 30, 40, 50];
+
+    for element in a {
+        println!("the value is: {}", element);
+    }
+}
+// you can even use a range (start..end) to accomplish a lot of while loops with for
+fn main() {
+    for number in (1..4).rev() {
+        println!("{}!", number);
+    }
+    println!("LIFTOFF!!!");
+}
+```
+
 
 
