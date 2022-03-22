@@ -324,4 +324,159 @@ $ cargo run
 
 ## Method Syntax
 
- 
+Methods are functioncs defined within the construct of a struc, enum, or trait object. the first parameter is always self and that references the particular instance of the struct that the method is called on.
+
+### Defining Methods
+
+```Rust
+#[derive(Debug)]
+struct Rectangle {
+    width: u32,
+    height: u32,
+}
+
+impl Rectangle {
+    fn area(&self) -> u32 {
+        self.width * self.height
+    }
+}
+
+fn main() {
+    let rect1 = Rectangle {
+        width: 30,
+        height: 50,
+    };
+
+    println!(
+        "The area of the rectangle is {} square pixels.",
+        rect1.area()
+    );
+}
+```
+
+*Things to note* 
+- `impl` blocks are where you define the methods. to 
+turn the area function into a method we move it in this block
+and add `self`
+- `&self` as a parameter is short for `&self: &Self` since 
+rust compiler knows you are in an impl block and first param
+has to be a reference to a param typed as &Self, it lets you leave the
+type out and infers it.
+- self param can be borrowed (this example) or owned, and the borrowing can be immutable or mutable.
+    - use cases for mutable borrowing would be changing the values of 
+    the attributes of the instance
+    - use cases for ownership of self are rare and usually involve transformation of self to another type, in which case you wouldn't want client code to keep using the original.
+- methods can have the same name as the struct's attributes, and rust figures out which you are referencing by whether or not you use `()` to call them. Rust doesn't auto implement getters, but you can make getters for attributes by using the same name for your method as an attribute and returning the same value. You can then encapsulate the attribute by only allowing access through the method, more on this in Chapter 7.
+- Rust has automatic referencing and dereferencing so unlike in C/C++ where you have to use different syntax to indicate whether the object you are calling a method on an object or a pointer to the object, rust figures out for you based on the type of self how to represent the object you are calling on. If rust couldn't do this, ownership would be too clunky to work with in practice because you'd always have to be referencing the context to figure out how to call methods on objects.
+
+### Methods with More Parameters
+
+```Rust
+#[derive(Debug)]
+struct Rectangle {
+    width: u32,
+    height: u32,
+}
+
+impl Rectangle {
+    fn area(&self) -> u32 {
+        self.width * self.height
+    }
+
+    fn can_hold(&self, other: &Rectangle) -> bool {
+        self.width > other.width && self.height > other.height
+    }
+}
+
+fn main() {
+    let rect1 = Rectangle {
+        width: 30,
+        height: 50,
+    };
+    let rect2 = Rectangle {
+        width: 10,
+        height: 40,
+    };
+    let rect3 = Rectangle {
+        width: 60,
+        height: 45,
+    };
+
+    println!("Can rect1 hold rect2? {}", rect1.can_hold(&rect2));
+    println!("Can rect1 hold rect3? {}", rect1.can_hold(&rect3));
+}
+```
+
+not much to add here, just an example that is slightly more complicated than the original, showing that you can have more parameters in a method than just self.
+
+### Associated Functions
+
+All methods defined in an `impl` block are referred to as associated functions because they are associated with the type that is named after `impl`. Some don't take self as  a parameter and arent intended to be called on a single instance of the type. Generally these functions are used for static factory method pattern, so you have a constructor that isn't the default constructor that can have a nice name and returns an instance with a particular initial state. 
+
+```Rust
+#[derive(Debug)]
+struct Rectangle {
+    width: u32,
+    height: u32,
+}
+
+impl Rectangle {
+    fn square(size: u32) -> Rectangle {
+        Rectangle {
+            width: size,
+            height: size,
+        }
+    }
+}
+
+fn main() {
+    let sq = Rectangle::square(3);
+}
+```
+
+Just like static methods in other languages, you preface them with the name of the struct type, in this case `Rectangle::`
+
+### Multiple impl Blocks
+
+structs don't have to jave just one impl blocks. It is hard to see why you would want to yet, but later in the book will be examples of that. For now, just know it is legal syntax. 
+
+```Rust
+
+#[derive(Debug)]
+struct Rectangle {
+    width: u32,
+    height: u32,
+}
+
+impl Rectangle {
+    fn area(&self) -> u32 {
+        self.width * self.height
+    }
+}
+
+impl Rectangle {
+    fn can_hold(&self, other: &Rectangle) -> bool {
+        self.width > other.width && self.height > other.height
+    }
+}
+
+fn main() {
+    let rect1 = Rectangle {
+        width: 30,
+        height: 50,
+    };
+    let rect2 = Rectangle {
+        width: 10,
+        height: 40,
+    };
+    let rect3 = Rectangle {
+        width: 60,
+        height: 45,
+    };
+
+    println!("Can rect1 hold rect2? {}", rect1.can_hold(&rect2));
+    println!("Can rect1 hold rect3? {}", rect1.can_hold(&rect3));
+}
+```
+
+done! 
